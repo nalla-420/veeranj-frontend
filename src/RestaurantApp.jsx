@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { ShoppingCart, LogOut, Search, Tag, Upload, X, Plus } from "lucide-react";
 
 // ─── BACKEND URL ──────────────────────────────────────────────────────────────
-const API = "https://veeranj-backend.onrender.com/";
+const API = "https://veeranj-backend-v2.vercel.app/";
 
 // ─── LOGO (paste your original base64 logo here) ─────────────────────────────
 const LOGO_B64 = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
