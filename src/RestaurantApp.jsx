@@ -977,6 +977,74 @@ function CouponsManager() {
   );
 }
 
+// ─── ORDER CARD (Admin) ───────────────────────────────────────────────────────
+function OrderCard({ o, si, sc, updateStatus }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div style={{ background:C.card, border:"1px solid " + C.border, borderRadius:14, overflow:"hidden" }}>
+      {/* Header */}
+      <div onClick={() => setOpen(p => !p)} style={{ padding:"14px 16px", cursor:"pointer", display:"flex", gap:10, alignItems:"center", flexWrap:"wrap" }}>
+        <div style={{ flex:1 }}>
+          <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:4, flexWrap:"wrap" }}>
+            <span style={{ fontFamily:SF, fontSize:15, color:C.cream, fontWeight:600 }}>{o.orderId}</span>
+            <span style={{ background:sc(o.status) + "22", color:sc(o.status), fontSize:10, padding:"3px 10px", borderRadius:20, fontWeight:700 }}>{(o.status||"").replace(/_/g," ").toUpperCase()}</span>
+          </div>
+          <p style={{ color:C.muted, fontSize:12 }}>👤 {o.customer} · 📞 {o.phone || "N/A"}</p>
+          <p style={{ color:C.faint, fontSize:11, marginTop:2 }}>📍 {o.addr}</p>
+        </div>
+        <div style={{ textAlign:"right" }}>
+          <div className="gt" style={{ fontFamily:SF, fontSize:17, fontWeight:700 }}>{fmt(o.grand)}</div>
+          <div style={{ color:C.faint, fontSize:10, marginTop:2 }}>{open ? "▲ Hide" : "▼ Details"}</div>
+        </div>
+      </div>
+
+      {/* Expanded Details */}
+      {open && (
+        <div style={{ borderTop:"1px solid " + C.border, padding:"14px 16px" }}>
+          {/* Items */}
+          <p style={{ color:C.gold, fontSize:10, letterSpacing:2, fontWeight:700, marginBottom:10 }}>ORDER ITEMS</p>
+          {(o.items || []).map((item, i) => (
+            <div key={i} style={{ display:"flex", justifyContent:"space-between", padding:"8px 0", borderBottom:"1px solid " + C.border }}>
+              <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                <VegDot size={10} />
+                <span style={{ color:C.cream, fontSize:13 }}>{item.name}</span>
+                <span style={{ color:C.faint, fontSize:12 }}>× {item.qty}</span>
+              </div>
+              <span className="gt" style={{ fontWeight:700, fontSize:13 }}>{fmt(item.price * item.qty)}</span>
+            </div>
+          ))}
+
+          {/* Bill */}
+          <div style={{ marginTop:12, background:C.surface, borderRadius:10, padding:12 }}>
+            <div style={{ display:"flex", justifyContent:"space-between", color:C.muted, fontSize:12, marginBottom:5 }}><span>Subtotal</span><span>{fmt(o.total)}</span></div>
+            {o.discount > 0 && <div style={{ display:"flex", justifyContent:"space-between", color:"#81C784", fontSize:12, marginBottom:5, fontWeight:700 }}><span>Discount {o.coupon ? `(${o.coupon})` : ""}</span><span>-{fmt(o.discount)}</span></div>}
+            <div style={{ display:"flex", justifyContent:"space-between", color:C.muted, fontSize:12, marginBottom:5 }}><span>Delivery</span><span>{o.delivery === 0 ? "FREE" : fmt(o.delivery)}</span></div>
+            <div style={{ display:"flex", justifyContent:"space-between", color:C.muted, fontSize:12, marginBottom:5 }}><span>GST</span><span>{fmt(o.gst)}</span></div>
+            <div style={{ display:"flex", justifyContent:"space-between", borderTop:"1px solid " + C.border, paddingTop:8, marginTop:4 }}>
+              <span style={{ color:C.cream, fontWeight:700 }}>Grand Total</span>
+              <span className="gt" style={{ fontWeight:700, fontSize:15 }}>{fmt(o.grand)}</span>
+            </div>
+          </div>
+
+          {/* Status stepper */}
+          <p style={{ color:C.gold, fontSize:10, letterSpacing:2, fontWeight:700, margin:"14px 0 10px" }}>UPDATE STATUS</p>
+          <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginBottom:12 }}>
+            {STEPS.map((step, i) => (
+              <div key={step} style={{ background: i === STEPS.indexOf(o.status) ? "linear-gradient(135deg," + C.goldL + "," + C.gold + ")" : i < STEPS.indexOf(o.status) ? "#0A200A" : C.surface, color: i === STEPS.indexOf(o.status) ? "#050300" : i < STEPS.indexOf(o.status) ? "#81C784" : C.faint, border:"1px solid " + (i <= STEPS.indexOf(o.status) ? C.gold : C.border), borderRadius:8, padding:"5px 10px", fontSize:10, fontWeight:700 }}>
+                {STEP_EMOJI[step]} {STEP_LABELS[step]}
+              </div>
+            ))}
+          </div>
+          <div style={{ display:"flex", gap:8 }}>
+            <Btn onClick={() => updateStatus(o._id, -1)} variant="ghost" disabled={si <= 0} style={{ flex:1, padding:"9px 0" }}>← Prev Step</Btn>
+            <Btn onClick={() => updateStatus(o._id, +1)} disabled={si >= STEPS.length - 1} style={{ flex:1, padding:"9px 0" }}>Next Step →</Btn>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── ADMIN PANEL ──────────────────────────────────────────────────────────────
 function AdminPanel({ orders, setOrders, menuItems, setMenuItems }) {
   const [tab, setTab]         = useState("orders");
@@ -1079,21 +1147,9 @@ function AdminPanel({ orders, setOrders, menuItems, setMenuItems }) {
           {orders.length === 0 && <p style={{ color:C.faint, textAlign:"center", padding:"32px 0" }}>No orders yet</p>}
           {orders.map(o => {
             const si = STEPS.indexOf(o.status);
+            const [expanded, setExpanded] = React.useState ? undefined : undefined;
             return (
-              <div key={o._id} style={{ background:C.card, border:"1px solid " + C.border, borderRadius:14, padding:16, display:"flex", gap:14, alignItems:"center", flexWrap:"wrap" }}>
-                <div style={{ flex:1, minWidth:180 }}>
-                  <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:4 }}>
-                    <span style={{ fontFamily:SF, fontSize:16, color:C.cream }}>{o.orderId}</span>
-                    <span style={{ background:sc(o.status) + "20", color:sc(o.status), fontSize:10, padding:"2px 9px", borderRadius:20, fontWeight:700 }}>{(o.status||"").replace("_"," ")}</span>
-                  </div>
-                  <p style={{ color:C.muted, fontSize:11 }}>{o.customer} · {o.addr}</p>
-                </div>
-                <div className="gt" style={{ fontFamily:SF, fontSize:16, fontWeight:700 }}>{fmt(o.grand)}</div>
-                <div style={{ display:"flex", gap:8 }}>
-                  <Btn onClick={() => updateStatus(o._id, -1)} variant="ghost" style={{ padding:"7px 12px", opacity:si <= 0 ? 0.3 : 1 }}>←</Btn>
-                  <Btn onClick={() => updateStatus(o._id, +1)} style={{ padding:"7px 12px", opacity:si >= STEPS.length - 1 ? 0.3 : 1 }}>→</Btn>
-                </div>
-              </div>
+              <OrderCard key={o._id} o={o} si={si} sc={sc} updateStatus={updateStatus} />
             );
           })}
         </div>
