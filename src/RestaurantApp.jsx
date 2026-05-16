@@ -590,7 +590,7 @@ function MenuPage({ menuItems, onAddToCart, cart, onBook }) {
 }
 
 // ─── SERVICES PAGE ────────────────────────────────────────────────────────────
-function ServicesPage({ onBook, reviews, onAddReview, onDeleteReview }) {
+function ServicesPage({ onBook, reviews, onAddReview, onDeleteReview, user }) {
   const [myBookings, setMyBookings] = useState([]);
   const [phone, setPhone] = useState("");
   const [searching, setSearching] = useState(false);
@@ -724,7 +724,7 @@ function ServicesPage({ onBook, reviews, onAddReview, onDeleteReview }) {
               </div>
               <div style={{ display:"flex", alignItems:"center", gap:8 }}>
                 <Stars n={r.rating} size={12} />
-                {r._id && (
+                {r._id && user && user.name === r.name && (
                   <button onClick={async () => {
                     if (!confirm("Delete your review?")) return;
                     try {
@@ -1716,7 +1716,7 @@ export default function RestaurantApp() {
       <div>
         {view === "home"     && <HomePage setView={setView} menuItems={menu} onAddToCart={addToCart} onBook={() => setShowBook(true)} />}
         {view === "menu"     && <MenuPage menuItems={menu} onAddToCart={addToCart} cart={cart} onBook={() => setShowBook(true)} />}
-        {view === "services" && <ServicesPage onBook={() => setShowBook(true)} reviews={reviews} onAddReview={() => setShowReview(true)} onDeleteReview={deleteReview} />}
+        {view === "services" && <ServicesPage onBook={() => setShowBook(true)} reviews={reviews} onAddReview={() => setShowReview(true)} onDeleteReview={deleteReview} user={user} />}
         {view === "tracking" && <TrackingPage trackingId={trackingId} setTrackingId={setTrackingId} />}
         {view === "contact"  && <ContactPage />}
         {view === "admin" && user?.role === "admin" && <AdminPanel orders={orders} setOrders={setOrders} menuItems={menu} setMenuItems={setMenu} />}
