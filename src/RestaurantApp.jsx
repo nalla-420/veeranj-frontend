@@ -2,10 +2,10 @@ import { useState, useEffect, useRef } from "react";
 import { ShoppingCart, LogOut, Search, Tag, Upload, X, Plus } from "lucide-react";
 
 // ─── BACKEND URL ──────────────────────────────────────────────────────────────
-const API = "https://veeranj-backend-v2.vercel.app/";
+const API = "https://veeranj-backend-v2.vercel.app/api";
 
-// ─── LOGO (paste your original base64 logo here) ─────────────────────────────
-const LOGO_B64 = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
+// ─── LOGO ─────────────────────────────────────────────────────────────────────
+const LOGO_B64 = "https://i.imgur.com/4VfJCbK.jpeg";
 
 // ─── CONSTANTS ────────────────────────────────────────────────────────────────
 const FREE_ABOVE   = 499;
