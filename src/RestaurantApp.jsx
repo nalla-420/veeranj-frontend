@@ -359,7 +359,7 @@ function ReviewModal({ onClose, onSubmit }) {
     try {
       await apiFetch("/reviews", { method:"POST", body: JSON.stringify(f) });
       setDone(true);
-      setTimeout(() => { onSubmit(f); onClose(); }, 1600);
+      setTimeout(() => { onSubmit(); onClose(); }, 1600);
     } catch(e) { alert(e.message); }
     finally { setLoading(false); }
   };
@@ -590,7 +590,7 @@ function MenuPage({ menuItems, onAddToCart, cart, onBook }) {
 }
 
 // ─── SERVICES PAGE ────────────────────────────────────────────────────────────
-function ServicesPage({ onBook, reviews, onAddReview }) {
+function ServicesPage({ onBook, reviews, onAddReview, onDeleteReview }) {
   const [myBookings, setMyBookings] = useState([]);
   const [phone, setPhone] = useState("");
   const [searching, setSearching] = useState(false);
@@ -716,13 +716,24 @@ function ServicesPage({ onBook, reviews, onAddReview }) {
             {r.dish && <div style={{ display:"inline-block", background:"rgba(201,146,42,0.12)", color:C.goldL, fontSize:10, padding:"3px 10px", borderRadius:12, marginBottom:12, fontWeight:700, border:"1px solid " + C.goldD }}>✦ {r.dish}</div>}
             <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", borderTop:"1px solid " + C.border, paddingTop:12 }}>
               <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-                <span style={{ fontSize:20 }}>{r.avatar || "👤"}</span>
+                <span style={{ fontSize:20 }}>👤</span>
                 <div>
                   <div style={{ color:C.cream, fontSize:12, fontWeight:700 }}>{r.name}</div>
-                  <div style={{ color:C.faint, fontSize:10 }}>{r.date || "Recently"}</div>
+                  <div style={{ color:C.faint, fontSize:10 }}>Recently</div>
                 </div>
               </div>
-              <Stars n={r.rating} size={12} />
+              <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                <Stars n={r.rating} size={12} />
+                {r._id && (
+                  <button onClick={async () => {
+                    if (!confirm("Delete your review?")) return;
+                    try {
+                      await apiFetch("/reviews/" + r._id, { method:"DELETE" });
+                      onDeleteReview(r._id);
+                    } catch(e) { alert(e.message); }
+                  }} style={{ background:"#200808", border:"1px solid #5A1010", color:"#E57373", borderRadius:6, padding:"3px 8px", cursor:"pointer", fontSize:11 }}>🗑️</button>
+                )}
+              </div>
             </div>
           </div>
         ))}
@@ -1384,11 +1395,12 @@ function AdminPanel({ orders, setOrders, menuItems, setMenuItems }) {
                   }} variant="ghost" style={{ flex:1, padding:"7px 0", fontSize:12 }}>↩️ Unapprove</Btn>
                 )}
                 <Btn onClick={async () => {
+                  if (!confirm("Delete this review permanently?")) return;
                   try {
                     await apiFetch("/reviews/" + r._id, { method:"DELETE" });
                     setAllReviews(prev => prev.filter(x => x._id !== r._id));
                   } catch(e) { alert(e.message); }
-                }} variant="danger" style={{ padding:"7px 14px", fontSize:12 }}>🗑️</Btn>
+                }} variant="danger" style={{ padding:"7px 14px", fontSize:12 }}>❌ Reject & Delete</Btn>
               </div>
             </div>
           ))}
@@ -1668,9 +1680,18 @@ export default function RestaurantApp() {
     } catch(e) { notify("Order failed: " + e.message); }
   };
 
-  const addReview = r => {
-    setReviews(prev => [{ ...r, id:Date.now() }, ...prev]);
-    notify("Review posted! Shukriya 🙏");
+  const addReview = async () => {
+    // Reload reviews from backend after posting
+    try {
+      const fresh = await apiFetch("/reviews");
+      setReviews(fresh);
+    } catch(e) {}
+    notify("Review submitted! Admin will approve it soon 🙏");
+  };
+
+  const deleteReview = async (id) => {
+    setReviews(prev => prev.filter(r => r._id !== id));
+    notify("Review deleted!");
   };
 
   const cartCount = cart.reduce((s, i) => s + i.qty, 0);
@@ -1695,7 +1716,7 @@ export default function RestaurantApp() {
       <div>
         {view === "home"     && <HomePage setView={setView} menuItems={menu} onAddToCart={addToCart} onBook={() => setShowBook(true)} />}
         {view === "menu"     && <MenuPage menuItems={menu} onAddToCart={addToCart} cart={cart} onBook={() => setShowBook(true)} />}
-        {view === "services" && <ServicesPage onBook={() => setShowBook(true)} reviews={reviews} onAddReview={() => setShowReview(true)} />}
+        {view === "services" && <ServicesPage onBook={() => setShowBook(true)} reviews={reviews} onAddReview={() => setShowReview(true)} onDeleteReview={deleteReview} />}
         {view === "tracking" && <TrackingPage trackingId={trackingId} setTrackingId={setTrackingId} />}
         {view === "contact"  && <ContactPage />}
         {view === "admin" && user?.role === "admin" && <AdminPanel orders={orders} setOrders={setOrders} menuItems={menu} setMenuItems={setMenu} />}
