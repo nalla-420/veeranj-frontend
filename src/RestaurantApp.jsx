@@ -271,7 +271,8 @@ function BookingModal({ onClose, onConfirm }) {
     try {
       await apiFetch("/bookings", { method:"POST", body: JSON.stringify(f) });
       setDone(true);
-      setTimeout(() => { onConfirm(f); onClose(); }, 2200);
+      onConfirm(f);
+      // Don't auto close — let customer read the instructions
     } catch(e) { alert(e.message); }
     finally { setLoading(false); }
   };
@@ -281,15 +282,23 @@ function BookingModal({ onClose, onConfirm }) {
       <div style={{ background:C.card, border:"1px solid " + C.border, borderRadius:16, width:"min(420px,100%)", padding:28, position:"relative", animation:"popIn .25s", maxHeight:"90vh", overflowY:"auto" }}>
         <button onClick={onClose} style={{ position:"absolute", top:14, right:16, background:"none", border:"none", color:C.faint, cursor:"pointer", fontSize:20 }}>✕</button>
         {done ? (
-          <div style={{ textAlign:"center", padding:"32px 0" }}>
+          <div style={{ textAlign:"center", padding:"16px 0" }}>
             <div style={{ fontSize:56 }}>🎊</div>
-            <h3 style={{ fontFamily:SF, fontSize:26, color:C.cream, margin:"14px 0 8px" }}>Booking Request Sent!</h3>
+            <h3 style={{ fontFamily:SF, fontSize:24, color:C.cream, margin:"12px 0 8px" }}>Booking Request Sent!</h3>
             <GoldBar />
-            <p style={{ color:C.muted, fontSize:13, lineHeight:1.8 }}>Table for <b style={{ color:C.goldL }}>{f.guests} guests</b> on <b style={{ color:C.goldL }}>{f.date}</b> at <b style={{ color:C.goldL }}>{f.time}</b></p>
-            <div style={{ background:C.surface, border:"1px solid " + C.border, borderRadius:12, padding:14, marginTop:16 }}>
-              <p style={{ color:C.gold, fontSize:12, fontWeight:700, marginBottom:6 }}>⏳ Awaiting Confirmation</p>
-              <p style={{ color:C.muted, fontSize:12 }}>Admin will confirm your booking soon. Check status anytime using your phone number in Services → My Bookings.</p>
+            <div style={{ background:C.surface, border:"1px solid " + C.border, borderRadius:12, padding:14, marginBottom:14, textAlign:"left" }}>
+              <p style={{ color:C.gold, fontSize:11, letterSpacing:2, fontWeight:700, marginBottom:8 }}>BOOKING DETAILS</p>
+              <p style={{ color:C.cream, fontSize:13, marginBottom:4 }}>👤 {f.name}</p>
+              <p style={{ color:C.cream, fontSize:13, marginBottom:4 }}>📞 {f.phone}</p>
+              <p style={{ color:C.cream, fontSize:13, marginBottom:4 }}>📅 {f.date} at {f.time}</p>
+              <p style={{ color:C.cream, fontSize:13 }}>👥 {f.guests} guests</p>
             </div>
+            <div style={{ background:"#1A1000", border:"1px solid " + C.goldD, borderRadius:12, padding:14, marginBottom:16 }}>
+              <p style={{ color:C.gold, fontSize:12, fontWeight:700, marginBottom:6 }}>⏳ Awaiting Admin Confirmation</p>
+              <p style={{ color:C.muted, fontSize:12, lineHeight:1.7 }}>To check your booking status anytime:</p>
+              <p style={{ color:C.goldL, fontSize:13, fontWeight:700, marginTop:6 }}>Services → Track My Booking → Enter: {f.phone}</p>
+            </div>
+            <Btn onClick={onClose} style={{ width:"100%", padding:"12px 0" }}>Got it! ✦</Btn>
           </div>
         ) : (
           <>
@@ -1335,17 +1344,51 @@ function AdminPanel({ orders, setOrders, menuItems, setMenuItems }) {
       {/* REVIEWS */}
       {tab === "reviews" && (
         <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
+          <div style={{ display:"flex", gap:8, marginBottom:4 }}>
+            <div style={{ background:C.surface, border:"1px solid " + C.border, borderRadius:8, padding:"6px 12px", fontSize:11, color:C.muted }}>
+              Pending: <b style={{ color:C.gold }}>{allReviews.filter(r => !r.approved).length}</b>
+            </div>
+            <div style={{ background:C.surface, border:"1px solid " + C.border, borderRadius:8, padding:"6px 12px", fontSize:11, color:C.muted }}>
+              Approved: <b style={{ color:"#81C784" }}>{allReviews.filter(r => r.approved).length}</b>
+            </div>
+          </div>
           {allReviews.length === 0 && <p style={{ color:C.faint, textAlign:"center", padding:"32px 0" }}>No reviews yet</p>}
           {allReviews.map(r => (
-            <div key={r._id} style={{ background:C.card, border:"1px solid " + C.border, borderRadius:12, padding:"14px 18px" }}>
-              <div style={{ display:"flex", justifyContent:"space-between", marginBottom:6 }}>
-                <span style={{ color:C.cream, fontWeight:700 }}>{r.name}</span>
+            <div key={r._id} style={{ background:C.card, border:"1px solid " + (r.approved ? C.green : C.border), borderRadius:12, padding:"14px 18px" }}>
+              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:6 }}>
+                <div>
+                  <span style={{ color:C.cream, fontWeight:700 }}>{r.name}</span>
+                  {r.dish && <span style={{ color:C.faint, fontSize:11, marginLeft:8 }}>on {r.dish}</span>}
+                  <span style={{ background: r.approved ? "#082008" : C.surface, color: r.approved ? "#81C784" : C.faint, fontSize:9, padding:"2px 8px", borderRadius:10, fontWeight:700, marginLeft:8 }}>
+                    {r.approved ? "✅ APPROVED" : "⏳ PENDING"}
+                  </span>
+                </div>
                 <Stars n={r.rating} size={12} />
               </div>
-              <p style={{ color:C.muted, fontSize:12, marginBottom:10 }}>{r.text}</p>
+              <p style={{ color:C.muted, fontSize:12, marginBottom:12, lineHeight:1.6 }}>{r.text}</p>
               <div style={{ display:"flex", gap:8 }}>
-                <Btn onClick={() => approveReview(r._id, true)} variant="success" style={{ padding:"4px 12px", fontSize:11 }}>✅ Approve</Btn>
-                <Btn onClick={() => approveReview(r._id, false)} variant="danger" style={{ padding:"4px 12px", fontSize:11 }}>❌ Reject</Btn>
+                {!r.approved && (
+                  <Btn onClick={async () => {
+                    try {
+                      await apiFetch("/reviews/" + r._id, { method:"PUT", body: JSON.stringify({ approved: true }) });
+                      setAllReviews(prev => prev.map(x => x._id === r._id ? { ...x, approved:true } : x));
+                    } catch(e) { alert(e.message); }
+                  }} variant="success" style={{ flex:1, padding:"7px 0", fontSize:12 }}>✅ Approve</Btn>
+                )}
+                {r.approved && (
+                  <Btn onClick={async () => {
+                    try {
+                      await apiFetch("/reviews/" + r._id, { method:"PUT", body: JSON.stringify({ approved: false }) });
+                      setAllReviews(prev => prev.map(x => x._id === r._id ? { ...x, approved:false } : x));
+                    } catch(e) { alert(e.message); }
+                  }} variant="ghost" style={{ flex:1, padding:"7px 0", fontSize:12 }}>↩️ Unapprove</Btn>
+                )}
+                <Btn onClick={async () => {
+                  try {
+                    await apiFetch("/reviews/" + r._id, { method:"DELETE" });
+                    setAllReviews(prev => prev.filter(x => x._id !== r._id));
+                  } catch(e) { alert(e.message); }
+                }} variant="danger" style={{ padding:"7px 14px", fontSize:12 }}>🗑️</Btn>
               </div>
             </div>
           ))}
