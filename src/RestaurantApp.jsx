@@ -1036,8 +1036,8 @@ function OrderCard({ o, si, sc, updateStatus }) {
             ))}
           </div>
           <div style={{ display:"flex", gap:8 }}>
-            <Btn onClick={() => updateStatus(o._id, -1)} variant="ghost" disabled={si <= 0} style={{ flex:1, padding:"9px 0" }}>← Prev Step</Btn>
-            <Btn onClick={() => updateStatus(o._id, +1)} disabled={si >= STEPS.length - 1} style={{ flex:1, padding:"9px 0" }}>Next Step →</Btn>
+            <Btn onClick={() => updateStatus(o._id, -1)} variant="ghost" disabled={si <= 0} style={{ flex:1, padding:"9px 0" }}>← Prev</Btn>
+            <Btn onClick={() => updateStatus(o._id, +1)} disabled={si >= STEPS.length - 1} style={{ flex:1, padding:"9px 0" }}>Next →</Btn>
           </div>
         </div>
       )}
@@ -1147,10 +1147,7 @@ function AdminPanel({ orders, setOrders, menuItems, setMenuItems }) {
           {orders.length === 0 && <p style={{ color:C.faint, textAlign:"center", padding:"32px 0" }}>No orders yet</p>}
           {orders.map(o => {
             const si = STEPS.indexOf(o.status);
-            const [expanded, setExpanded] = React.useState ? undefined : undefined;
-            return (
-              <OrderCard key={o._id} o={o} si={si} sc={sc} updateStatus={updateStatus} />
-            );
+            return <OrderCard key={o._id} o={o} si={si} sc={sc} updateStatus={updateStatus} />;
           })}
         </div>
       )}
