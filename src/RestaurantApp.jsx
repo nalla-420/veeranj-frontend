@@ -743,13 +743,19 @@ function TrackingPage({ trackingId, setTrackingId }) {
 function ContactPage() {
   const [f, setF]   = useState({ name:"", email:"", msg:"" });
   const [sent, setSent] = useState(false);
-  const send = () => {
+  const send = async () => {
     if (!f.name || !f.email || !f.msg) return;
-    const waMsg = encodeURIComponent(`Name: ${f.name}\nEmail: ${f.email}\n\nMessage:\n${f.msg}`);
-    window.open(`https://wa.me/919368874446?text=${waMsg}`, "_blank");
-    setSent(true);
-    setTimeout(() => setSent(false), 4000);
-    setF({ name:"", email:"", msg:"" });
+    try {
+      await apiFetch("/messages", {
+        method:"POST",
+        body: JSON.stringify({ name: f.name, email: f.email, message: f.msg }),
+      });
+      setSent(true);
+      setTimeout(() => setSent(false), 4000);
+      setF({ name:"", email:"", msg:"" });
+    } catch(e) {
+      alert("Failed: " + e.message);
+    }
   };
   return (
     <div style={{ maxWidth:900, margin:"0 auto", padding:"32px 16px 80px" }}>
@@ -1055,11 +1061,13 @@ function AdminPanel({ orders, setOrders, menuItems, setMenuItems }) {
   const [newItem, setNewItem] = useState({ name:"", cat:"Starters", price:"", desc:"", img:"", imgPreview:"" });
   const [bookings, setBookings] = useState([]);
   const [allReviews, setAllReviews] = useState([]);
+  const [messages, setMessages] = useState([]);
   const fileRef = useRef();
 
   useEffect(() => {
     if (tab === "bookings") apiFetch("/bookings").then(setBookings).catch(() => {});
     if (tab === "reviews")  apiFetch("/reviews/all").then(setAllReviews).catch(() => {});
+    if (tab === "messages") apiFetch("/messages").then(setMessages).catch(() => {});
   }, [tab]);
 
   const handleImageFile = e => {
@@ -1136,7 +1144,7 @@ function AdminPanel({ orders, setOrders, menuItems, setMenuItems }) {
 
       {/* Tabs */}
       <div style={{ display:"flex", gap:8, flexWrap:"wrap", marginBottom:18 }}>
-        {[["orders","📦 Orders"],["menu","🍛 Menu"],["bookings","🪑 Bookings"],["reviews","⭐ Reviews"],["coupons","🏷️ Coupons"]].map(([t,l]) => (
+        {[["orders","📦 Orders"],["menu","🍛 Menu"],["bookings","🪑 Bookings"],["reviews","⭐ Reviews"],["messages","💬 Messages"],["coupons","🏷️ Coupons"]].map(([t,l]) => (
           <button key={t} onClick={() => setTab(t)} style={{ background:tab === t ? "linear-gradient(135deg," + C.goldL + "," + C.gold + ")" : "transparent", color:tab === t ? "#050300" : C.muted, border:"1px solid " + (tab === t ? C.gold : C.border), borderRadius:10, padding:"9px 18px", fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:SN }}>
             {l}
           </button>
@@ -1245,6 +1253,39 @@ function AdminPanel({ orders, setOrders, menuItems, setMenuItems }) {
               <div style={{ display:"flex", gap:8 }}>
                 <Btn onClick={() => approveReview(r._id, true)} variant="success" style={{ padding:"4px 12px", fontSize:11 }}>✅ Approve</Btn>
                 <Btn onClick={() => approveReview(r._id, false)} variant="danger" style={{ padding:"4px 12px", fontSize:11 }}>❌ Reject</Btn>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* MESSAGES */}
+      {tab === "messages" && (
+        <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
+          {messages.length === 0 && <p style={{ color:C.faint, textAlign:"center", padding:"32px 0" }}>No messages yet</p>}
+          {messages.map(m => (
+            <div key={m._id} style={{ background:C.card, border:"1px solid " + (m.read ? C.border : C.gold), borderRadius:12, padding:"16px 18px" }}>
+              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:8 }}>
+                <div>
+                  <span style={{ color:C.cream, fontWeight:700, fontSize:14 }}>{m.name}</span>
+                  {!m.read && <span style={{ background:C.gold, color:"#050300", fontSize:9, padding:"2px 8px", borderRadius:10, fontWeight:700, marginLeft:8 }}>NEW</span>}
+                  <p style={{ color:C.muted, fontSize:12, marginTop:2 }}>✉️ {m.email}</p>
+                </div>
+                <span style={{ color:C.faint, fontSize:10 }}>{new Date(m.createdAt).toLocaleDateString("en-IN")}</span>
+              </div>
+              <p style={{ color:C.cream, fontSize:13, lineHeight:1.7, background:C.surface, padding:"10px 12px", borderRadius:8, marginBottom:10 }}>{m.message}</p>
+              <div style={{ display:"flex", gap:8 }}>
+                {!m.read && (
+                  <Btn onClick={async () => {
+                    await apiFetch("/messages/" + m._id, { method:"PUT" });
+                    setMessages(prev => prev.map(x => x._id === m._id ? { ...x, read:true } : x));
+                  }} variant="success" style={{ padding:"5px 14px", fontSize:11 }}>✓ Mark Read</Btn>
+                )}
+                <Btn onClick={async () => {
+                  await apiFetch("/messages/" + m._id, { method:"DELETE" });
+                  setMessages(prev => prev.filter(x => x._id !== m._id));
+                }} variant="danger" style={{ padding:"5px 14px", fontSize:11 }}>🗑️ Delete</Btn>
+                <Btn onClick={() => window.open(`mailto:${m.email}?subject=Re: Your message to Veeranj&body=Hi ${m.name},`, "_blank")} variant="outline" style={{ padding:"5px 14px", fontSize:11 }}>↩️ Reply</Btn>
               </div>
             </div>
           ))}
