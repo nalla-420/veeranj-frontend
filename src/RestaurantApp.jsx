@@ -745,6 +745,8 @@ function ContactPage() {
   const [sent, setSent] = useState(false);
   const send = () => {
     if (!f.name || !f.email || !f.msg) return;
+    const waMsg = encodeURIComponent(`Name: ${f.name}\nEmail: ${f.email}\n\nMessage:\n${f.msg}`);
+    window.open(`https://wa.me/919368874446?text=${waMsg}`, "_blank");
     setSent(true);
     setTimeout(() => setSent(false), 4000);
     setF({ name:"", email:"", msg:"" });
@@ -755,7 +757,7 @@ function ContactPage() {
       <h2 style={{ fontFamily:SF, fontSize:"clamp(26px,5vw,42px)", fontWeight:600, color:C.cream, marginBottom:16 }}>Connect With Us</h2>
       <GoldBar />
       <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(220px, 1fr))", gap:14, marginBottom:26 }}>
-        {[{ icon:"📍", title:"Visit Us", lines:["Connaught Place, New Delhi","Open daily: 11 AM – 11 PM"] },{ icon:"📞", title:"Call Us", lines:["+91 98765 43210","+91 98765 43211"] },{ icon:"✉️", title:"Email Us", lines:["hello@veeranj.com","reservations@veeranj.com"] }].map((card, i) => (
+        {[{ icon:"📍", title:"Visit Us", lines:["Connaught Place, New Delhi","Open daily: 11 AM – 11 PM"] },{ icon:"📞", title:"Call Us", lines:["+91 93688 74446","+91 93688 74446"] },{ icon:"✉️", title:"Email Us", lines:["fearlessgagansharma@gmail.com","fearlessgagansharma@gmail.com"] }].map((card, i) => (
           <div key={i} className="dc" style={{ background:C.card, border:"1px solid " + C.border, borderRadius:14, padding:22, textAlign:"center" }}>
             <div style={{ width:48, height:48, borderRadius:"50%", background:"rgba(201,146,42,0.1)", border:"1px solid " + C.goldD, display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 12px", fontSize:20 }}>{card.icon}</div>
             <h4 style={{ fontFamily:SF, fontSize:15, color:C.cream, fontWeight:600, marginBottom:8 }}>{card.title}</h4>
@@ -766,7 +768,7 @@ function ContactPage() {
       <div style={{ background:C.card, border:"1px solid " + C.border, borderRadius:14, padding:24, marginBottom:24, textAlign:"center" }}>
         <p style={{ color:C.faint, fontSize:9, letterSpacing:4, marginBottom:14 }}>FOLLOW VEERANJ</p>
         <div style={{ display:"flex", gap:10, justifyContent:"center", flexWrap:"wrap" }}>
-          {[["📸","Instagram","@veeranj.in"],["👍","Facebook","Veeranj Delhi"],["💬","WhatsApp","+91 98765 43210"],["▶️","YouTube","Veeranj Kitchen"]].map(([ic,nm,h]) => (
+          {[["📸","Instagram","@veeranj.in"],["👍","Facebook","Veeranj Delhi"],["💬","WhatsApp","+91 93688 74446"],["✉️","Email","fearlessgagansharma@gmail.com"]].map(([ic,nm,h]) => (
             <div key={nm} style={{ background:C.surface, border:"1px solid " + C.border, borderRadius:10, padding:"10px 14px", textAlign:"center", minWidth:80, cursor:"pointer" }}
               onMouseEnter={e => e.currentTarget.style.borderColor = C.gold}
               onMouseLeave={e => e.currentTarget.style.borderColor = C.border}>
